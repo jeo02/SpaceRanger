@@ -381,7 +381,7 @@ public class SpaceRanger2 extends JComponent implements KeyListener, MouseListen
     
     //Determines if the game is over
     public void isGameOver(){
-        if(lives <= 0 && healthBar.getHealth() <= 0)
+        if(lives <= 0 && (healthBar.getHealth() <= 0) || healthBar.getHealth() <= 0)
             end = true;
         else if(level == 6 || boss.getHealth() <= 0)
             won = true;
@@ -512,11 +512,10 @@ public class SpaceRanger2 extends JComponent implements KeyListener, MouseListen
         bossMove();
         level();
         
-        if(!end || !won)
-            isGameOver();
+        isGameOver();
+        
         //Do not write below this
         repaint();
-        
         
     }
     //These methods are required by the compiler.  
@@ -542,7 +541,7 @@ public class SpaceRanger2 extends JComponent implements KeyListener, MouseListen
     public void start(final int ticks){
         Thread gameThread = new Thread(){
             public void run(){
-                while(true){
+                while(!end && !won){
                     loop();
                     try{
                         Thread.sleep(1000 / ticks);
