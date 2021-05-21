@@ -1,3 +1,4 @@
+import java.applet.AudioClip;
 import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Graphics;
@@ -11,6 +12,8 @@ import javax.swing.JComponent;
 import javax.swing.JFrame;
 import java.awt.Font;
 import java.util.ArrayList;
+import java.applet.Applet;
+import java.applet.AudioClip;
 
 public class SpaceRanger2 extends JComponent implements KeyListener, MouseListener{
     //instance variables
@@ -22,8 +25,14 @@ public class SpaceRanger2 extends JComponent implements KeyListener, MouseListen
     private long msElapsed, preMsElapsed, preMsElapsed2, temp, temp2, temp3;
     
     private boolean left, right, space, blink, end, won, bossTime;
-    private int lives, level, aTime, bTime;
+    private int lives, level, aTime, bTime, bossbSpeed;
     private double bSpeed;
+    
+    //sound
+    private final AudioClip BACK_MUSIC;
+    private final AudioClip SHOT;
+    private final AudioClip GAME_OVER;
+    private final AudioClip VICTORY;
     
     //Default Constructor
     public SpaceRanger2()
@@ -32,7 +41,7 @@ public class SpaceRanger2 extends JComponent implements KeyListener, MouseListen
         WIDTH = 525;
         HEIGHT = 1000;
         player = new Rectangle(WIDTH/2 - 30, HEIGHT - 125, 70, 70, 25, 0, 1000);
-        boss = new Rectangle(WIDTH/2-60, -100, 100, 100, 0, 5, 2000);
+        boss = new Rectangle(WIDTH/2-60, -100, 100, 100, 0, 5, 5000);
         whiteBar = new Rectangle(160, 960, 200,25,0,0,100);
         healthBar = new Rectangle(160, 960, 200, 25, 0, 0, 100);
         bullets = new ArrayList<Circle>();
@@ -45,6 +54,7 @@ public class SpaceRanger2 extends JComponent implements KeyListener, MouseListen
         aTime = 1500;
         bTime = 800;
         bSpeed = 8;
+        bossbSpeed = 8;
         temp = 0;
         temp2 = 0;
         temp3 = 0;
@@ -56,6 +66,12 @@ public class SpaceRanger2 extends JComponent implements KeyListener, MouseListen
         blink = false;
         end = false;
         bossTime = false;
+        BACK_MUSIC = Applet.newAudioClip(getClass().getResource("Light-Years_v001.wav"));
+        SHOT = Applet.newAudioClip(getClass().getResource("lazer7.wav"));
+        GAME_OVER = Applet.newAudioClip(getClass().getResource("game_over.wav"));
+        VICTORY = Applet.newAudioClip(getClass().getResource("victoryff.wav"));
+        BACK_MUSIC.loop();
+        
         
         //Setting up the GUI
         JFrame gui = new JFrame(); 
@@ -83,8 +99,10 @@ public class SpaceRanger2 extends JComponent implements KeyListener, MouseListen
             left = true;
         else if(key == 39)
             right = true;
-        if(key == 32)
+        if(key == 32){
             space = true;  
+            SHOT.play();
+        }
     } 
     
     // depending on what key/s are being pressed it does a action
@@ -164,7 +182,7 @@ public class SpaceRanger2 extends JComponent implements KeyListener, MouseListen
         int x = (int) (Math.random() * 10);
         if(temp3 + bTime < msElapsed)
         {
-            enemyBullets.add(new Circle(0,250,20,0,15,5,1));
+            enemyBullets.add(new Circle(0,250,20,0,bossbSpeed,5,1));
             if(x == 0)
                 enemyBullets.get(enemyBullets.size()-1).setX(50);
             if(x == 1)
@@ -203,28 +221,25 @@ public class SpaceRanger2 extends JComponent implements KeyListener, MouseListen
         
         //level 1 
         if(msElapsed >= 30000 && msElapsed <= 50000){
-            //bossTime = true;
-            //level = 1;
             bossTime = true;
-            level = 5;
-            bSpeed = 16;
-            aTime = 900;
-            bTime = 300;
-            asteroidSpawn();
+            level = 1;
+            bossbSpeed = 8;
+            aTime = 1500;
+            bTime = 700;
         }
         //level 2
         else if(msElapsed >= 80000 && msElapsed <= 100000){
             bossTime = true;
             level = 2;
-            bSpeed = 10;
+            bossbSpeed = 10;
             aTime = 1400;
-            bTime = 700;
+            bTime = 600;
         }
         //level 3
         else if(msElapsed >= 130000 && msElapsed <= 150000){
             bossTime = true;
             level = 3;
-            bSpeed = 12;
+            bossbSpeed = 12;
             aTime = 1300;
             bTime = 550;
         }
@@ -232,7 +247,7 @@ public class SpaceRanger2 extends JComponent implements KeyListener, MouseListen
         else if(msElapsed >= 180000 && msElapsed <= 200000){
             bossTime = true;
             level = 4;
-            bSpeed = 14;
+            bossbSpeed = 14;
             aTime = 1150;
             bTime = 400;
             asteroidSpawn();
@@ -241,7 +256,7 @@ public class SpaceRanger2 extends JComponent implements KeyListener, MouseListen
         else if(msElapsed >= 230000 && msElapsed <= 250000){
             bossTime = true;
             level = 5;
-            bSpeed = 16;
+            bossbSpeed = 16;
             aTime = 900;
             bTime = 300;
             asteroidSpawn();
@@ -251,7 +266,6 @@ public class SpaceRanger2 extends JComponent implements KeyListener, MouseListen
         }
         else{
             bossTime = false;
-            boss.setHealth(2000);
         }    
     }
     //Distance Formula
@@ -278,7 +292,7 @@ public class SpaceRanger2 extends JComponent implements KeyListener, MouseListen
                         asteroids.remove(a);
                         
                         //increasing the speed steadily everytime a asteriod is removed
-                        bSpeed += .1;
+                        bSpeed += .015;
                     }
                     bullets.remove(b);
                 }
@@ -297,8 +311,16 @@ public class SpaceRanger2 extends JComponent implements KeyListener, MouseListen
             
             //collision between astroid and player
             if(!blink && distance((2*(a.getX()+a.getVX())+ a.getDiam())/2, (2*(a.getY()+a.getVY())+ a.getDiam())/2, (2*(player.getX()+player.getVX())+ player.getW())/2, (2*(player.getY()+player.getVY())+ player.getW())/2) < player.getW()){
-                lives -=1;
-                blink = true;
+                //if lives is at 0 subtract from health bar
+                if(lives > 0){
+                    lives -=1;
+                    blink = true;
+                }
+                else{
+                    healthBar.setHealth(healthBar.getHealth()- a.getDamage());
+                    healthBar.setW(healthBar.getHealth()*2);
+                }
+                
                 temp2 = msElapsed;
                 asteroids.remove(a);
             }
@@ -338,9 +360,15 @@ public class SpaceRanger2 extends JComponent implements KeyListener, MouseListen
                 
                 //collsion
                 if(!blink && cX >= playerX && cX <= playerX+100 && cY - b.getDiam()/2 >= playerY){
-                    lives--;
+                    if(lives > 0){
+                        lives--;
+                        blink = true;
+                    }
+                    else{
+                        healthBar.setHealth(healthBar.getHealth()- b.getDamage());
+                        healthBar.setW(healthBar.getHealth()*2);
+                    }
                     enemyBullets.remove(b);
-                    blink = true;
                     temp2 = msElapsed;
                 }
                 
@@ -353,7 +381,7 @@ public class SpaceRanger2 extends JComponent implements KeyListener, MouseListen
     
     //Determines if the game is over
     public void isGameOver(){
-        if(lives <= 0 || healthBar.getHealth() <= 0)
+        if(lives <= 0 && healthBar.getHealth() <= 0)
             end = true;
         else if(level == 6 || boss.getHealth() <= 0)
             won = true;
@@ -366,6 +394,10 @@ public class SpaceRanger2 extends JComponent implements KeyListener, MouseListen
         g.setColor(Color.DARK_GRAY);
         g.setFont(small);
         g.drawString(msg, WIDTH/2-50, HEIGHT/2);
+        
+        //music
+        BACK_MUSIC.stop();
+        GAME_OVER.play();
     }
     
     //sets the screen to you won!
@@ -375,13 +407,15 @@ public class SpaceRanger2 extends JComponent implements KeyListener, MouseListen
         g.setColor(Color.DARK_GRAY);
         g.setFont(small);
         g.drawString(msg, WIDTH/2-50, HEIGHT/2);
+        BACK_MUSIC.stop();
+        VICTORY.play();
     }
     //All your UI drawing goes in here
     public void paintComponent(Graphics g)
     {
         if(!end && !won){
             //Drawing the wallpaper to be the background
-            Image imgBackground = Toolkit.getDefaultToolkit().getImage("C:\\Users\\juano\\OneDrive\\Desktop\\stuff\\SpaceRanger\\src\\SpaceWallpaper.jpg");
+            Image imgBackground = Toolkit.getDefaultToolkit().getImage(getClass().getResource("SpaceWallpaper.jpg"));
             g.drawImage(imgBackground, 0, 0, WIDTH, HEIGHT, this);
             
             Font small = new Font("Helvetica", Font.BOLD, 14);
@@ -391,7 +425,7 @@ public class SpaceRanger2 extends JComponent implements KeyListener, MouseListen
             
             //Drawing the user-controlled rectangle, blink indicates that it was hit and gives the user a couple seconds without getting hit
             if(!blink){
-                Image img = Toolkit.getDefaultToolkit().getImage("C:\\Users\\juano\\OneDrive\\Desktop\\stuff\\SpaceRanger\\src\\SpaceShip.png");
+                Image img = Toolkit.getDefaultToolkit().getImage(getClass().getResource("SpaceShip.png"));
                 g.drawImage(img ,player.getX(), player.getY(), player.getW(), player.getH(), this);
             }
             if(blink){
@@ -400,7 +434,7 @@ public class SpaceRanger2 extends JComponent implements KeyListener, MouseListen
             }
         
             //Draws Boss
-            Image imgBoss = Toolkit.getDefaultToolkit().getImage("C:\\Users\\juano\\OneDrive\\Desktop\\stuff\\SpaceRanger\\src\\boss.gif");
+            Image imgBoss = Toolkit.getDefaultToolkit().getImage(getClass().getResource("boss.gif"));
             g.drawImage(imgBoss ,boss.getX(), boss.getY(), boss.getW(), boss.getH(), this);    
         
             //Drawing the health bar 
@@ -424,7 +458,7 @@ public class SpaceRanger2 extends JComponent implements KeyListener, MouseListen
             //Drawing the Asteroids
             g.setColor(Color.WHITE);
             for (Circle asteroid : asteroids) {
-                Image img = Toolkit.getDefaultToolkit().getImage("C:\\Users\\juano\\OneDrive\\Desktop\\stuff\\SpaceRanger\\src\\Asteroid.png");
+                Image img = Toolkit.getDefaultToolkit().getImage(getClass().getResource("Asteroid.png"));
                 g.drawImage(img ,asteroid.getX(), asteroid.getY(), asteroid.getDiam(), asteroid.getDiam(), this);
             }
         }
@@ -457,7 +491,7 @@ public class SpaceRanger2 extends JComponent implements KeyListener, MouseListen
         }
         
         //Checking to see if blink is true so that it changes color for 3000ms
-        if(blink && msElapsed > temp2+3000){
+        if(blink && msElapsed > temp2+2000){
             blink = false;
         }
         
