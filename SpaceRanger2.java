@@ -512,7 +512,8 @@ public class SpaceRanger2 extends JComponent implements KeyListener, MouseListen
         bossMove();
         level();
         
-        isGameOver();
+        if(!end || !won)
+            isGameOver();
         //Do not write below this
         repaint();
         
